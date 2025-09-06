@@ -8,7 +8,9 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), // .env 로딩
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
@@ -24,7 +26,6 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
-    TypeOrmModule.forFeature([User]),
     AuthModule,
     UserModule,
   ],
