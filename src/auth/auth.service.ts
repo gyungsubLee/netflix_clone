@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -11,6 +12,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
   /// rawToken: Basic $token
@@ -25,9 +27,9 @@ export class AuthService {
       throw new BadRequestException('이미 가입한 이메일입니다.');
     }
 
-    // 환경변수 처리: 해시 강도(BCRYPT_SALT_ROUNDS) 기본값 10
+    // 환경변수 처리: 해시 강도(HASH_ROUNDS) 기본값 10
     const saltRounds = Number(
-      this.configService.get<number | string>('BCRYPT_SALT_ROUNDS', 10),
+      this.configService.get<number | string>('HASH_ROUNDS', 10),
     );
 
     const hash = await bcrypt.hash(password, saltRounds);
@@ -40,6 +42,57 @@ export class AuthService {
     return this.userRepository.findOne({
       where: { email },
     });
+  }
+
+  /// rawToken: Basic $token
+  async login(rawToken: string) {
+    const { email, password } = this.parseBasicToken(rawToken);
+
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new BadRequestException('잘못된 로그인 정보입니다.'); // 보안적 취약점이 될 수 있기 때문에, 이메일이라는 구체적 정보를 명시하지 않음
+    }
+
+    const passOk = await bcrypt.compare(password, user.password);
+
+    if (!passOk) {
+      throw new BadRequestException('잘못된 로그인 정보입니다.'); // 보안적 취약점이 될 수 있기 때문에, 이메일이라는 구체적 정보를 명시하지 않음
+    }
+
+    const refreshTokenSecret = this.configService.get<string>(
+      'REFRESH_TOKEN_SECRET',
+    );
+    const accessTokenSecret = this.configService.get<string>(
+      'ACCESS_TOKEN_SECRET',
+    );
+
+    return {
+      refreshToken: await this.jwtService.signAsync(
+        {
+          sub: user.id,
+          role: user.role,
+          type: 'refresh',
+        },
+        {
+          secret: refreshTokenSecret,
+          expiresIn: '24h',
+        },
+      ),
+      accessToken: await this.jwtService.signAsync(
+        {
+          sub: user.id,
+          role: user.role,
+          type: 'access',
+        },
+        {
+          secret: accessTokenSecret,
+          expiresIn: 300,
+        },
+      ),
+    };
   }
 
   parseBasicToken(rawToken: string) {
