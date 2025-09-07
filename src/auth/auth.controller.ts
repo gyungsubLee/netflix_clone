@@ -1,5 +1,6 @@
-import { Controller, Headers, Post } from '@nestjs/common';
+import { Controller, Headers, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { LocalAuthGuard } from './strategy/local.strategy';
 
 @Controller('auth')
 export class AuthController {
@@ -15,5 +16,14 @@ export class AuthController {
   /// authorization: Basic $token
   loginUser(@Headers('authorization') token: string) {
     return this.authService.login(token);
+  }
+
+  @UseGuards(LocalAuthGuard)
+  @Post('login/passport')
+  async loginUserPassport(@Request() req) {
+    return {
+      refreshToken: await this.authService.issueToken(req.user, false),
+      accessToken: await this.authService.issueToken(req.user, false),
+    };
   }
 }
