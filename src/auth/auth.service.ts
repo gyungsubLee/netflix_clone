@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
+import { Role, User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -51,12 +51,12 @@ export class AuthService {
     const user = await this.authenticate(email, password);
 
     return {
-      refreshToken: await this.issueToken(user, false),
+      refreshToken: await this.issueToken(user, true),
       accessToken: await this.issueToken(user, false),
     };
   }
 
-  async issueToken(user: User, isRefreshToken: boolean) {
+  async issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
     const refreshTokenSecret = this.configService.get<string>(
       'REFRESH_TOKEN_SECRET',
     );
@@ -72,7 +72,7 @@ export class AuthService {
       },
       {
         secret: isRefreshToken ? refreshTokenSecret : accessTokenSecret,
-        expiresIn: isRefreshToken ? '24h' : 300,
+        expiresIn: isRefreshToken ? '24h' : '300s',
       },
     );
   }
@@ -103,10 +103,14 @@ export class AuthService {
     const basicSplit = rawToken.split(' ');
 
     if (basicSplit.length !== 2) {
-      throw new BadRequestException('토큰 포맷이 유효하지 않습니다. 1');
+      throw new BadRequestException('토큰 포맷이 유효하지 않습니다.');
     }
 
-    const [_, token] = basicSplit;
+    const [basic, token] = basicSplit;
+
+    if (basic.toLowerCase() !== 'basic') {
+      throw new BadRequestException('토큰 포맷이 잘못됐습니다.');
+    }
 
     /**
      * 2) 추출한 토큰을 base64 디코딩해서 이메일과 비밀번호로 나눈다.
@@ -119,7 +123,7 @@ export class AuthService {
     console.log(inputInfo);
 
     if (inputInfo.length !== 2) {
-      throw new BadRequestException('토큰 포맷이 유효하지 않습니다. 2');
+      throw new BadRequestException('토큰 포맷이 유효하지 않습니다.');
     }
 
     const [email, password] = inputInfo;

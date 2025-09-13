@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
@@ -6,6 +11,7 @@ import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import * as Joi from 'joi';
+import { BearerTokenMiddleware } from './auth/middlware/bearer-token.middleware';
 
 @Module({
   imports: [
@@ -42,4 +48,14 @@ import * as Joi from 'joi';
     UserModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(BearerTokenMiddleware)
+      .exclude(
+        { path: '/auth/register', method: RequestMethod.POST },
+        { path: '/auth/login', method: RequestMethod.POST },
+      )
+      .forRoutes('*'); // 모든 라우터 계층에 적용
+  }
+}
