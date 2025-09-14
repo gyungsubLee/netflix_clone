@@ -26,9 +26,9 @@ export class BearerTokenMiddleware implements NestMiddleware {
         return;
       }
 
-      const payload = this.parseBearerToken(authHeader);
-      next();
+      const payload = await this.parseBearerToken(authHeader);
       req.user = payload;
+      next();
     } catch (e) {
       throw new UnauthorizedException('토큰이 만료되었습니다.');
       next();
