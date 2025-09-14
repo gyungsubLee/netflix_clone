@@ -12,6 +12,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import * as Joi from 'joi';
 import { BearerTokenMiddleware } from './auth/middlware/bearer-token.middleware';
+import { CatsModule } from './cats/cats.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/guard/auth.guard';
 
 @Module({
   imports: [
@@ -46,6 +49,13 @@ import { BearerTokenMiddleware } from './auth/middlware/bearer-token.middleware'
     }),
     AuthModule,
     UserModule,
+    CatsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {

@@ -120,8 +120,6 @@ export class AuthService {
 
     const inputInfo = decoded.split(':');
 
-    console.log(inputInfo);
-
     if (inputInfo.length !== 2) {
       throw new BadRequestException('토큰 포맷이 유효하지 않습니다.');
     }
