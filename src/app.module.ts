@@ -15,6 +15,7 @@ import { BearerTokenMiddleware } from './auth/middlware/bearer-token.middleware'
 import { CatsModule } from './cats/cats.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/guard/auth.guard';
+import { RBACGuard } from './auth/guard/rbac.guard';
 
 @Module({
   imports: [
@@ -52,9 +53,14 @@ import { AuthGuard } from './auth/guard/auth.guard';
     CatsModule,
   ],
   providers: [
+    // AuthGuard -> RBACGuard
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RBACGuard,
     },
   ],
 })
@@ -63,7 +69,8 @@ export class AppModule implements NestModule {
     consumer
       .apply(BearerTokenMiddleware)
       .exclude(
-        { path: '/auth/register', method: RequestMethod.POST },
+        { path: '/auth/register/user', method: RequestMethod.POST },
+        { path: '/auth/register/admin', method: RequestMethod.POST },
         { path: '/auth/login', method: RequestMethod.POST },
       )
       .forRoutes('*'); // 모든 라우터 계층에 적용

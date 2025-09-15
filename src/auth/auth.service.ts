@@ -16,7 +16,7 @@ export class AuthService {
   ) {}
 
   /// rawToken: Basic $token
-  async register(rawToken: string) {
+  async register(rawToken: string, isAdmin: boolean) {
     const { email, password } = this.parseBasicToken(rawToken);
 
     const user = await this.userRepository.findOne({
@@ -37,6 +37,7 @@ export class AuthService {
     await this.userRepository.save({
       email,
       password: hash,
+      role: isAdmin ? Role.admin : Role.user,
     });
 
     return this.userRepository.findOne({

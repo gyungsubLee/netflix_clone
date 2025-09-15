@@ -21,10 +21,17 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @Post('register')
+  @Post('register/user')
   /// authorization: Basic $token
   registerUser(@Headers('authorization') token: string) {
-    return this.authService.register(token);
+    return this.authService.register(token, false);
+  }
+
+  @Public()
+  @Post('register/admin')
+  /// authorization: Basic $token
+  registerAdmin(@Headers('authorization') token: string) {
+    return this.authService.register(token, true);
   }
 
   @Public()
