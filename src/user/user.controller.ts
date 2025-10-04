@@ -12,13 +12,16 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { LoggingInterceptor } from 'src/common/interceptor/logging.interceptor';
 
 @Controller('user')
 @UseInterceptors(ClassSerializerInterceptor)
+@UseInterceptors(LoggingInterceptor) // 컨트롤러 레벨에서 인터셉터 적용
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @UseInterceptors(LoggingInterceptor) // 메서드 레벨에서 인터셉터 적용
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
