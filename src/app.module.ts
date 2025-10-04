@@ -16,7 +16,9 @@ import { CatsModule } from './cats/cats.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './auth/guard/auth.guard';
 import { RBACGuard } from './auth/guard/rbac.guard';
-import { LoggingInterceptor } from './common/interceptor/logging.interceptor';
+import { ResponseTimeInterceptor } from './common/interceptor/response-time.interceptor';
+import { CacheInterceptor } from './common/interceptor/cache.interceptor';
+import { TransactionInterceptor } from './common/interceptor/transaction.interceptor';
 
 @Module({
   imports: [
@@ -65,7 +67,15 @@ import { LoggingInterceptor } from './common/interceptor/logging.interceptor';
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
+      useClass: ResponseTimeInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransactionInterceptor,
     },
   ],
 })
