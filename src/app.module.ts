@@ -12,13 +12,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import * as Joi from 'joi';
 import { BearerTokenMiddleware } from './auth/middlware/bearer-token.middleware';
-import { CatsModule } from './cats/cats.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './auth/guard/auth.guard';
 import { RBACGuard } from './auth/guard/rbac.guard';
 import { ResponseTimeInterceptor } from './common/interceptor/response-time.interceptor';
 import { CacheInterceptor } from './common/interceptor/cache.interceptor';
 import { TransactionInterceptor } from './common/interceptor/transaction.interceptor';
+import { DirectorModule } from './director/director.module';
+import { GenreModule } from './genre/genre.module';
+import { MovieModule } from './movie/movie.module';
+import { Movie } from './movie/entities/movie.entity';
+import { MovieDetail } from './movie/entities/movie-datail.entity';
+import { Genre } from './genre/entities/genre.entity';
+import { Director } from './director/entities/director.entity';
 
 @Module({
   imports: [
@@ -45,7 +51,7 @@ import { TransactionInterceptor } from './common/interceptor/transaction.interce
         username: cfg.get<string>('DB_USERNAME'),
         password: cfg.get<string>('DB_PASSWORD'),
         database: cfg.get<string>('DB_DATABASE'),
-        entities: [User],
+        entities: [User, Movie, MovieDetail, Genre, Director],
         synchronize: cfg.get<string>('DB_TYPE') === 'prod' ? false : true, // 운영에서는 반드시 false
         logging: true,
         namingStrategy: new SnakeNamingStrategy(),
@@ -53,7 +59,9 @@ import { TransactionInterceptor } from './common/interceptor/transaction.interce
     }),
     AuthModule,
     UserModule,
-    CatsModule,
+    DirectorModule,
+    GenreModule,
+    MovieModule,
   ],
   providers: [
     // AuthGuard -> RBACGuard
@@ -69,10 +77,10 @@ import { TransactionInterceptor } from './common/interceptor/transaction.interce
       provide: APP_INTERCEPTOR,
       useClass: ResponseTimeInterceptor,
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor,
-    },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: CacheInterceptor,
+    // },
     {
       provide: APP_INTERCEPTOR,
       useClass: TransactionInterceptor,
