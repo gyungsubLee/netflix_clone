@@ -64,6 +64,12 @@ export class AuthService {
     const accessTokenSecret = this.configService.get<string>(
       'ACCESS_TOKEN_SECRET',
     );
+    const refreshTokenExpiresTime = this.configService.get<string>(
+      'REFRESH_TOKEN_EXPIRES_TIME',
+    );
+    const accessTokenSecretExpiresTime = this.configService.get<string>(
+      'ACCESS_TOKEN_EXPIRES_TIME',
+    );
 
     return this.jwtService.signAsync(
       {
@@ -73,7 +79,9 @@ export class AuthService {
       },
       {
         secret: isRefreshToken ? refreshTokenSecret : accessTokenSecret,
-        expiresIn: isRefreshToken ? '24h' : '300s',
+        expiresIn: isRefreshToken
+          ? refreshTokenExpiresTime
+          : accessTokenSecretExpiresTime,
       },
     );
   }
