@@ -9,6 +9,7 @@ import {
   Query,
   UseInterceptors,
   ClassSerializerInterceptor as CI,
+  Req,
 } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -36,8 +37,8 @@ export class MovieController {
 
   @Post()
   @RBAC(Role.admin)
-  postMovie(@Body() body: CreateMovieDto) {
-    return this.movieService.create(body);
+  postMovie(@Req() req, @Body() body: CreateMovieDto) {
+    return this.movieService.create(body, req.user);
   }
 
   @Patch(':id')

@@ -21,6 +21,6 @@ export class CreateMovieDto {
   @Type(() => String)
   genreIds: string[];
 
-  @IsString()
-  movieFileName: string;
+  // @IsString()
+  // movieFileName: string;
 }

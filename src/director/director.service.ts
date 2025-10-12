@@ -20,15 +20,23 @@ export class DirectorService {
     return this.directorRepository.find();
   }
 
-  findOne(id: number) {
-    return this.directorRepository.findOne({ where: { id } });
+  async findOne(id: number) {
+    const findDirector = await this.directorRepository.findOne({
+      where: { id },
+    });
+
+    if (!findDirector) {
+      throw new NotFoundException('해당하는 director가 존재하지 않습니다.');
+    }
+
+    return findDirector;
   }
 
   async update(id: number, updateDirectorDto: UpdateDirectorDto) {
     const director = await this.directorRepository.findOne({ where: { id } });
 
     if (!director) {
-      throw new NotFoundException('존재하지 않는 영화입니다.');
+      throw new NotFoundException('존재하지 않는 감독 id 입니다.');
     }
 
     await this.directorRepository.update({ id }, { ...updateDirectorDto });

@@ -74,13 +74,13 @@ export class MovieService {
     });
 
     if (genres.length !== createMovieDto.genreIds.length) {
-      throw new NotFoundException(
-        `존재하지 않는 장르가 있습니다. ids: ${genres.map((genre) => genre.id).join(',')}`,
-      );
+      const ids = createMovieDto.genreIds?.join(',') ?? '';
+      throw new NotFoundException(`존재하지 않는 장르가 있습니다. ids: ${ids}`);
     }
 
     // 3. Movie 생성
     const movie = this.movieRepository.create({
+      // TODO: creator: user,
       title: createMovieDto.title,
       director,
       detail: { detail: createMovieDto.detail }, // cascade로 MovieDetail 자동 저장

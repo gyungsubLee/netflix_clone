@@ -41,6 +41,7 @@ export class AuthController {
     return this.authService.login(token);
   }
 
+  @Public()
   @Post('token/access')
   async rotateAccessToken(@Req() req) {
     const payload = await Promise.resolve(req.user); // 혹시 모를 Promise 방지

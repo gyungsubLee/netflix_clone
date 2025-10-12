@@ -12,7 +12,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import * as Joi from 'joi';
 import { BearerTokenMiddleware } from './auth/middlware/bearer-token.middleware';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './auth/guard/auth.guard';
 import { RBACGuard } from './auth/guard/rbac.guard';
 import { ResponseTimeInterceptor } from './common/interceptor/response-time.interceptor';
@@ -25,6 +25,9 @@ import { Movie } from './movie/entities/movie.entity';
 import { MovieDetail } from './movie/entities/movie-datail.entity';
 import { Genre } from './genre/entities/genre.entity';
 import { Director } from './director/entities/director.entity';
+import { ForbiddenExceptionFilter } from './common/filter/forbidden.filter';
+import { QueryFailedExceptionFilter } from './common/filter/query-failed.filter';
+import { AllExceptionsFilter } from './common/filter/http-exception.filter';
 
 @Module({
   imports: [
@@ -84,6 +87,18 @@ import { Director } from './director/entities/director.entity';
     {
       provide: APP_INTERCEPTOR,
       useClass: TransactionInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ForbiddenExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: QueryFailedExceptionFilter,
     },
   ],
 })
