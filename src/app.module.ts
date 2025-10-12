@@ -28,6 +28,7 @@ import { Director } from './director/entities/director.entity';
 import { ForbiddenExceptionFilter } from './common/filter/forbidden.filter';
 import { QueryFailedExceptionFilter } from './common/filter/query-failed.filter';
 import { AllExceptionsFilter } from './common/filter/http-exception.filter';
+import { CommonResponseInterceptor } from './common/interceptor/common-response.interceptor';
 
 @Module({
   imports: [
@@ -80,10 +81,10 @@ import { AllExceptionsFilter } from './common/filter/http-exception.filter';
       provide: APP_INTERCEPTOR,
       useClass: ResponseTimeInterceptor,
     },
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: CacheInterceptor,
-    // },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CommonResponseInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: TransactionInterceptor,
