@@ -1,18 +1,19 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
-  Delete,
-  UseInterceptors,
   ClassSerializerInterceptor,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseInterceptors,
 } from '@nestjs/common';
-import { UserService } from './user.service';
+import { LoggingInterceptor } from 'src/common/interceptor/logging.interceptor';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { LoggingInterceptor } from 'src/common/interceptor/logging.interceptor';
+import { UserService } from './user.service';
 
 @Controller('user')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -32,17 +33,20 @@ export class UserController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.remove(id);
   }
 }

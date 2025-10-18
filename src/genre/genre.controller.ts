@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
@@ -31,19 +32,22 @@ export class GenreController {
 
   @Get(':id')
   @RBAC(Role.user)
-  findOne(@Param('id') id: string) {
-    return this.genreService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.genreService.findOne(id);
   }
 
   @Patch(':id')
   @RBAC(Role.admin)
-  update(@Param('id') id: string, @Body() updateGenreDto: UpdateGenreDto) {
-    return this.genreService.update(+id, updateGenreDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateGenreDto: UpdateGenreDto,
+  ) {
+    return this.genreService.update(id, updateGenreDto);
   }
 
   @Delete(':id')
   @RBAC(Role.admin)
-  remove(@Param('id') id: string) {
-    return this.genreService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.genreService.remove(id);
   }
 }
