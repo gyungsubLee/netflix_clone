@@ -18,7 +18,7 @@ import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Role } from 'src/user/entities/user.entity';
 import { RBAC } from 'src/auth/decorator/rbac.decorator';
 import { Public } from 'src/auth/decorator/public.decorator';
-
+import { GetMoviesReqDto } from './dto/get-movies.dto';
 @Controller('movie')
 @UseInterceptors(CI)
 export class MovieController {
@@ -26,8 +26,8 @@ export class MovieController {
 
   @Get()
   @Public()
-  getMovices(@Query('title') title?: string) {
-    return this.movieService.findAll(title);
+  getMovicesBytitle(@Query() dto: GetMoviesReqDto) {
+    return this.movieService.findAllByTitle(dto);
   }
 
   @Get(':id')

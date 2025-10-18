@@ -3,11 +3,14 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Movie } from './entities/movie.entity';
-import { DataSource, In, Like, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { MovieDetail } from './entities/movie-datail.entity';
 import { Director } from 'src/director/entities/director.entity';
 import { Genre } from 'src/genre/entities/genre.entity';
 import { User } from 'src/user/entities/user.entity';
+import { GetMoviesReqDto } from './dto/get-movies.dto';
+import { PaginationResDto } from 'src/common/dto/pagination.response.dto';
+import { PaginationBuilderResDto } from 'src/common/dto/pagination-builder.response.dto';
 
 @Injectable()
 export class MovieService {
@@ -23,7 +26,10 @@ export class MovieService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async findAll(title?: string) {
+  async findAllByTitle(dto: GetMoviesReqDto) {
+    const { title, page, size } = dto;
+    const skip = (page - 1) * size;
+
     const qb = this.dataSource
       .getRepository(Movie)
       .createQueryBuilder('movie')
@@ -35,8 +41,17 @@ export class MovieService {
       qb.where('movie.title LIKE :title', { title: `%${title}%` });
     }
 
-    const [movies, count] = await qb.getManyAndCount();
-    return { movies, count };
+    const [movies, count] = await qb.skip(skip).take(size).getManyAndCount();
+
+    // 정적 팩토리 패턴
+    // return PaginationResDto.from(movies, page, size);
+
+    return PaginationBuilderResDto.builder()
+      .withData(movies)
+      .withPage(page)
+      .withSize(size)
+      .withTotalCount(count)
+      .build();
   }
 
   async findOne(id: number) {
