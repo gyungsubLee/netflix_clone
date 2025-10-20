@@ -69,14 +69,14 @@ import { CommonResponseInterceptor } from './common/interceptor/common-response.
   ],
   providers: [
     // AuthGuard -> RBACGuard
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RBACGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AuthGuard,
+    // },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: RBACGuard,
+    // },
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseTimeInterceptor,
@@ -85,10 +85,10 @@ import { CommonResponseInterceptor } from './common/interceptor/common-response.
       provide: APP_INTERCEPTOR,
       useClass: CommonResponseInterceptor,
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransactionInterceptor,
-    },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: TransactionInterceptor,
+    // },
     {
       provide: APP_FILTER,
       useClass: ForbiddenExceptionFilter,

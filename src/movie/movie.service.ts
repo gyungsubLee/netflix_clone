@@ -15,6 +15,7 @@ import { User } from 'src/user/entities/user.entity';
 import { GetMoviesReqDto } from './dto/get-movies.dto';
 import { PagePaginationBuilderResDto } from 'src/common/dto/page/page-pagination-builder.response.dto';
 import { CommonService } from 'src/common/common.service';
+import { CursorePaginationResDto } from 'src/common/dto/cursor/cursor-pagination.response.dto';
 
 @Injectable()
 export class MovieService {
@@ -32,8 +33,7 @@ export class MovieService {
   ) {}
 
   async findAllByTitle(dto: GetMoviesReqDto) {
-    const { title, page, size } = dto;
-    const skip = (page - 1) * size;
+    const { title, id, order, size } = dto;
 
     const qb = this.dataSource
       .getRepository(Movie)
@@ -46,21 +46,11 @@ export class MovieService {
       qb.where('movie.title LIKE :title', { title: `%${title}%` });
     }
 
-    if (page && size) {
-      this.commonSerivce.applyPagePaginationParamsToQb(qb, page, size);
-    }
+    this.commonSerivce.applyCursorPaginationParamsToQb(qb, dto);
 
     const [movies, count] = await qb.getManyAndCount();
 
-    // 정적 팩토리 패턴
-    // return PaginationResDto.from(movies, page, size);
-
-    return PagePaginationBuilderResDto.builder()
-      .withData(movies)
-      .withPage(page)
-      .withSize(size)
-      .withTotalCount(count)
-      .build();
+    return CursorePaginationResDto.from(movies, order, size, count);
   }
 
   async findOne(id: number) {
