@@ -1,6 +1,6 @@
 import { IsInt, IsOptional } from 'class-validator';
 
-export class PaginationReqDto {
+export class PagePaginationReqDto {
   @IsInt()
   @IsOptional()
   page: number = 1;

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,8 +13,8 @@ import { Director } from 'src/director/entities/director.entity';
 import { Genre } from 'src/genre/entities/genre.entity';
 import { User } from 'src/user/entities/user.entity';
 import { GetMoviesReqDto } from './dto/get-movies.dto';
-import { PaginationResDto } from 'src/common/dto/pagination.response.dto';
-import { PaginationBuilderResDto } from 'src/common/dto/pagination-builder.response.dto';
+import { PagePaginationResDto } from 'src/common/dto/page/page-pagination.response.dto';
+import { PagePaginationBuilderResDto } from 'src/common/dto/page/page-pagination-builder.response.dto';
 
 @Injectable()
 export class MovieService {
@@ -41,12 +45,17 @@ export class MovieService {
       qb.where('movie.title LIKE :title', { title: `%${title}%` });
     }
 
+    if (page && size) {
+      qb.take(size);
+      qb.skip(skip);
+    }
+
     const [movies, count] = await qb.skip(skip).take(size).getManyAndCount();
 
     // 정적 팩토리 패턴
     // return PaginationResDto.from(movies, page, size);
 
-    return PaginationBuilderResDto.builder()
+    return PagePaginationBuilderResDto.builder()
       .withData(movies)
       .withPage(page)
       .withSize(size)

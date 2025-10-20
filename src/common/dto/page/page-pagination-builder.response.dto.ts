@@ -22,12 +22,12 @@ class PaginationBuilder<T> {
     return this;
   }
 
-  build(): PaginationBuilderResDto<T> {
-    return new PaginationBuilderResDto(this);
+  build(): PagePaginationBuilderResDto<T> {
+    return new PagePaginationBuilderResDto(this);
   }
 }
 
-export class PaginationBuilderResDto<T> {
+export class PagePaginationBuilderResDto<T> {
   readonly data: T[];
   readonly size: number;
   readonly page: number;

@@ -1,4 +1,4 @@
-export class PaginationResDto<T> {
+export class PagePaginationResDto<T> {
   readonly data: T[];
   readonly size: number;
   readonly page: number;
@@ -24,6 +24,6 @@ export class PaginationResDto<T> {
   }
 
   static from<T>(data: T[], size: number, page: number, totalCount?: number) {
-    return new PaginationResDto(data, size, page, totalCount);
+    return new PagePaginationResDto(data, size, page, totalCount);
   }
 }
