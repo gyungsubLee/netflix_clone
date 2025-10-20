@@ -13,8 +13,8 @@ import { Director } from 'src/director/entities/director.entity';
 import { Genre } from 'src/genre/entities/genre.entity';
 import { User } from 'src/user/entities/user.entity';
 import { GetMoviesReqDto } from './dto/get-movies.dto';
-import { PagePaginationResDto } from 'src/common/dto/page/page-pagination.response.dto';
 import { PagePaginationBuilderResDto } from 'src/common/dto/page/page-pagination-builder.response.dto';
+import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class MovieService {
@@ -28,6 +28,7 @@ export class MovieService {
     @InjectRepository(Genre)
     private readonly genreRepository: Repository<Genre>,
     private readonly dataSource: DataSource,
+    private readonly commonSerivce: CommonService,
   ) {}
 
   async findAllByTitle(dto: GetMoviesReqDto) {
@@ -46,11 +47,10 @@ export class MovieService {
     }
 
     if (page && size) {
-      qb.take(size);
-      qb.skip(skip);
+      this.commonSerivce.applyPagePaginationParamsToQb(qb, page, size);
     }
 
-    const [movies, count] = await qb.skip(skip).take(size).getManyAndCount();
+    const [movies, count] = await qb.getManyAndCount();
 
     // 정적 팩토리 패턴
     // return PaginationResDto.from(movies, page, size);
