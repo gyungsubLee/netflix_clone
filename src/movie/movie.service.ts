@@ -7,15 +7,13 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Movie } from './entities/movie.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { MovieDetail } from './entities/movie-datail.entity';
 import { Director } from 'src/director/entities/director.entity';
 import { Genre } from 'src/genre/entities/genre.entity';
 import { User } from 'src/user/entities/user.entity';
 import { GetMoviesReqDto } from './dto/get-movies.dto';
-import { PagePaginationBuilderResDto } from 'src/common/dto/page/page-pagination-builder.response.dto';
 import { CommonService } from 'src/common/common.service';
-import { CursorePaginationResDto } from 'src/common/dto/cursor/cursor-pagination.response.dto';
 
 @Injectable()
 export class MovieService {
@@ -72,66 +70,52 @@ export class MovieService {
     return movie;
   }
 
-  async create(createMovieDto: CreateMovieDto, creator: User) {
-    const qr = this.dataSource.createQueryRunner();
+  async create(creator: User, qr: QueryRunner, createMovieDto: CreateMovieDto) {
+    // 1. Director 검증
+    const director = await qr.manager
+      .getRepository(Director)
+      .createQueryBuilder('director')
+      .where('director.id = :id', { id: createMovieDto.directorId })
+      .getOne();
 
-    await qr.connect();
-    await qr.startTransaction();
-
-    try {
-      // 1. Director 검증
-      const director = await this.dataSource
-        .getRepository(Director)
-        .createQueryBuilder('director')
-        .where('director.id = :id', { id: createMovieDto.directorId })
-        .getOne();
-
-      if (!director) {
-        throw new NotFoundException('존재하지 않는 Director 입니다.');
-      }
-
-      // 2. Genres 검증
-
-      const genres = await this.validateGenres(createMovieDto.genreIds);
-
-      // 3. MovieDetail 생성
-      const movieDetail = this.dataSource.getRepository(MovieDetail).create({
-        detail: createMovieDto.detail,
-      });
-      const savedDetail = await this.dataSource
-        .getRepository(MovieDetail)
-        .save(movieDetail);
-
-      // 4. Movie 생성
-      const movie = this.dataSource.getRepository(Movie).create({
-        title: createMovieDto.title,
-        director,
-        detail: savedDetail,
-        genres,
-        creator,
-      });
-
-      const savedMovie = await this.dataSource.getRepository(Movie).save(movie);
-
-      // 4. 한 번의 save로 Movie + MovieDetail + ManyToMany genres 연결
-
-      return this.dataSource
-        .getRepository(Movie)
-        .createQueryBuilder('movie')
-        .leftJoinAndSelect('movie.detail', 'detail')
-        .leftJoinAndSelect('movie.director', 'director')
-        .leftJoinAndSelect('movie.genres', 'genres')
-        .leftJoinAndSelect('movie.creator', 'creator')
-        .where('movie.id = :id', { id: savedMovie.id })
-        .getOne();
-
-      await qr.commitTransaction();
-    } catch (e) {
-      await qr.rollbackTransaction();
-      throw e;
-    } finally {
-      await qr.release();
+    if (!director) {
+      throw new NotFoundException('존재하지 않는 Director 입니다.');
     }
+
+    // 2. Genres 검증
+
+    const genres = await this.validateGenres(createMovieDto.genreIds);
+
+    // 3. MovieDetail 생성
+    const movieDetail = qr.manager.getRepository(MovieDetail).create({
+      detail: createMovieDto.detail,
+    });
+    const savedDetail = await qr.manager
+      .getRepository(MovieDetail)
+      .save(movieDetail);
+
+    // 4. Movie 생성
+    const movie = qr.manager.getRepository(Movie).create({
+      title: createMovieDto.title,
+      director,
+      detail: savedDetail,
+      genres,
+      creator,
+    });
+
+    const savedMovie = await qr.manager.getRepository(Movie).save(movie);
+
+    // 4. 한 번의 save로 Movie + MovieDetail + ManyToMany genres 연결
+
+    return qr.manager
+      .getRepository(Movie)
+      .createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.detail', 'detail')
+      .leftJoinAndSelect('movie.director', 'director')
+      .leftJoinAndSelect('movie.genres', 'genres')
+      .leftJoinAndSelect('movie.creator', 'creator')
+      .where('movie.id = :id', { id: savedMovie.id })
+      .getOne();
   }
 
   async update(id: number, updateMovieDto: UpdateMovieDto) {

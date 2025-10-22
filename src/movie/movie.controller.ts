@@ -19,6 +19,11 @@ import { Role } from 'src/user/entities/user.entity';
 import { RBAC } from 'src/auth/decorator/rbac.decorator';
 import { Public } from 'src/auth/decorator/public.decorator';
 import { GetMoviesReqDto } from './dto/get-movies.dto';
+import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
+import { User } from 'src/common/decorator/user.decorator';
+import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
+import { QueryRunner as QR } from 'typeorm';
+
 @Controller('movie')
 @UseInterceptors(CI)
 export class MovieController {
@@ -38,8 +43,13 @@ export class MovieController {
 
   @Post()
   @RBAC(Role.admin)
-  postMovie(@Req() req, @Body() body: CreateMovieDto) {
-    return this.movieService.create(body, req.user);
+  @UseInterceptors(TransactionInterceptor)
+  postMovie(
+    @User() user: any,
+    @QueryRunner() qr: QR,
+    @Body() body: CreateMovieDto,
+  ) {
+    return this.movieService.create(user, qr, body);
   }
 
   @Patch(':id')

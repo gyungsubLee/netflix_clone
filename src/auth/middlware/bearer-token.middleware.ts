@@ -27,7 +27,9 @@ export class BearerTokenMiddleware implements NestMiddleware {
 
     try {
       const payload = await this.parseBearerToken(authHeader);
+
       req.user = payload;
+
       next();
     } catch (e) {
       if (e.name === 'TokenExpiredError') {
