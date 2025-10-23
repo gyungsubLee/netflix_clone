@@ -18,8 +18,8 @@ export class CreateMovieDto {
   @IsString({
     each: true,
   })
-  @Type(() => String)
-  genreIds: string[];
+  @Type(() => Number)
+  genreIds: number[];
 
   // @IsString()
   // movieFileName: string;

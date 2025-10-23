@@ -206,7 +206,7 @@ export class MovieService {
     return id;
   }
 
-  private async validateGenres(ids: string[]): Promise<Genre[]> {
+  private async validateGenres(ids: number[]): Promise<Genre[]> {
     const genres = await this.genreRepository
       .createQueryBuilder('genre')
       .where('genre.id IN (:...ids)', { ids })
