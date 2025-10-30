@@ -12,6 +12,7 @@ import {
   Req,
   ParseIntPipe,
   UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -24,7 +25,7 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { User } from 'src/common/decorator/user.decorator';
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('movie')
 @UseInterceptors(CI)
@@ -46,12 +47,12 @@ export class MovieController {
   @Post()
   @RBAC(Role.admin)
   @UseInterceptors(TransactionInterceptor)
-  @UseInterceptors(FileInterceptor('movie'))
+  @UseInterceptors(FilesInterceptor('movie'))
   postMovie(
     @User() user: U,
     @QueryRunner() qr: QR,
     @Body() body: CreateMovieDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.movieService.create(user, qr, body);
   }
