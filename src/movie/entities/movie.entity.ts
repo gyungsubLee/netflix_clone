@@ -47,4 +47,9 @@ export class Movie extends BaseTable {
     nullable: false,
   })
   director: Director;
+
+  @Column({
+    nullable: true,
+  })
+  movieFilePath?: string;
 }

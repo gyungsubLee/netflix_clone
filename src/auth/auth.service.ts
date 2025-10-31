@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Role, User } from 'src/user/entities/user.entity';
+import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from './enum/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -57,7 +58,7 @@ export class AuthService {
     };
   }
 
-  async issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
+  async issueToken(user: User, isRefreshToken: boolean) {
     const refreshTokenSecret = this.configService.get<string>(
       'REFRESH_TOKEN_SECRET',
     );

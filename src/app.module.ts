@@ -25,7 +25,6 @@ import { Movie } from './movie/entities/movie.entity';
 import { MovieDetail } from './movie/entities/movie-datail.entity';
 import { Genre } from './genre/entities/genre.entity';
 import { Director } from './director/entities/director.entity';
-import { ForbiddenExceptionFilter } from './common/filter/forbidden.filter';
 import { QueryFailedExceptionFilter } from './common/filter/query-failed.filter';
 import { AllExceptionsFilter } from './common/filter/http-exception.filter';
 import { CommonResponseInterceptor } from './common/interceptor/common-response.interceptor';
@@ -69,14 +68,14 @@ import { CommonResponseInterceptor } from './common/interceptor/common-response.
   ],
   providers: [
     // AuthGuard -> RBACGuard
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: RBACGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RBACGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseTimeInterceptor,
@@ -89,10 +88,10 @@ import { CommonResponseInterceptor } from './common/interceptor/common-response.
     //   provide: APP_INTERCEPTOR,
     //   useClass: TransactionInterceptor,
     // },
-    {
-      provide: APP_FILTER,
-      useClass: ForbiddenExceptionFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: ForbiddenExceptionFilter,
+    // },
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,

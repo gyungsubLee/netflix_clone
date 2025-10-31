@@ -20,9 +20,10 @@ export class QueryFailedExceptionFilter implements ExceptionFilter {
 
     response.status(status).json({
       statusCode: status,
-      timestamp: new Date().toISOString(),
+      error: 'DATABASE_ERROR',
       path: request.url,
       message,
+      timestamp: new Date().toISOString(),
     });
   }
 }

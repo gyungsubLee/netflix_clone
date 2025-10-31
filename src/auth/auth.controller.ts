@@ -14,6 +14,8 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './strategy/local.strategy';
 import { JwtAuthGuard } from './strategy/jwt.strategy';
 import { Public } from './decorator/public.decorator';
+import { User } from 'src/common/decorator/user.decorator';
+import { User as U } from 'src/user/entities/user.entity';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -43,13 +45,11 @@ export class AuthController {
 
   @Public()
   @Post('token/access')
-  async rotateAccessToken(@Req() req) {
-    const payload = await Promise.resolve(req.user); // 혹시 모를 Promise 방지
-    if (!payload || payload.type !== 'refresh') {
-      throw new UnauthorizedException('잘못된 토큰입니다.');
-    }
+  async rotateAccessToken(@User() user: U) {
+    console.log('rotateAccessToken user:', user);
+
     return {
-      accessToken: await this.authService.issueToken(payload, false),
+      accessToken: await this.authService.issueToken(user, false),
     };
   }
 

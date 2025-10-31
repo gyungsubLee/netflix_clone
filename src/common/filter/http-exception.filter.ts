@@ -6,7 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 
-@Catch() // 특정 예외만 잡고 싶으면 (TypeError)처럼 클래스 지정 가능
+@Catch(HttpException)
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

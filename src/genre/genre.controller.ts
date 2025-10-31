@@ -12,7 +12,7 @@ import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
 import { RBAC } from 'src/auth/decorator/rbac.decorator';
-import { Role } from 'src/user/entities/user.entity';
+import { Role } from 'src/auth/enum/role.enum';
 
 @Controller('genre')
 export class GenreController {

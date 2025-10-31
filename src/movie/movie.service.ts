@@ -27,7 +27,7 @@ export class MovieService {
     @InjectRepository(Genre)
     private readonly genreRepository: Repository<Genre>,
     private readonly dataSource: DataSource,
-    private readonly commonSerivce: CommonService,
+    private readonly commonService: CommonService,
   ) {}
 
   async findAllByTitle(dto: GetMoviesReqDto) {
@@ -45,7 +45,7 @@ export class MovieService {
     }
 
     const { nextCursor } =
-      await this.commonSerivce.applyCursorPaginationParamsToQb(qb, dto);
+      await this.commonService.applyCursorPaginationParamsToQb(qb, dto);
 
     const [data, count] = await qb.getManyAndCount();
 
@@ -70,12 +70,17 @@ export class MovieService {
     return movie;
   }
 
-  async create(creator: User, qr: QueryRunner, createMovieDto: CreateMovieDto) {
+  async create(
+    creator: User,
+    qr: QueryRunner,
+    dto: CreateMovieDto,
+    file?: Express.Multer.File,
+  ) {
     // 1. Director 검증
     const director = await qr.manager
       .getRepository(Director)
       .createQueryBuilder('director')
-      .where('director.id = :id', { id: createMovieDto.directorId })
+      .where('director.id = :id', { id: dto.directorId })
       .getOne();
 
     if (!director) {
@@ -84,26 +89,36 @@ export class MovieService {
 
     // 2. Genres 검증
 
-    const genres = await this.validateGenres(createMovieDto.genreIds);
+    const genres = await this.validateGenres(qr, dto.genreIds);
 
     // 3. MovieDetail 생성
     const movieDetail = qr.manager.getRepository(MovieDetail).create({
-      detail: createMovieDto.detail,
+      detail: dto.detail,
     });
+
     const savedDetail = await qr.manager
       .getRepository(MovieDetail)
       .save(movieDetail);
 
     // 4. Movie 생성
-    const movie = qr.manager.getRepository(Movie).create({
-      title: createMovieDto.title,
+    const movieData: Partial<Movie> = {
+      title: dto.title,
       director,
       detail: savedDetail,
       genres,
       creator,
-    });
+    };
 
-    const savedMovie = await qr.manager.getRepository(Movie).save(movie);
+    // 파일이 업로드된 경우 파일 경로 추가
+    if (file) {
+      movieData.movieFilePath = `/movie/${file.filename}`;
+    }
+
+    const movie = qr.manager.getRepository(Movie).create(movieData);
+
+    const savedMovie = (await qr.manager
+      .getRepository(Movie)
+      .save(movie)) as Movie;
 
     // 4. 한 번의 save로 Movie + MovieDetail + ManyToMany genres 연결
 
@@ -165,14 +180,14 @@ export class MovieService {
 
       // 4. genres 교체
       if (genreIds) {
-        const genres = await this.validateGenres(genreIds);
+        const genres = await this.validateGenres(qr, genreIds);
 
         movie.genres = genres;
       }
 
       await this.dataSource.getRepository(Movie).save(movie);
 
-      return this.dataSource
+      const updatedMovie = this.dataSource
         .getRepository(Movie)
         .createQueryBuilder('movie')
         .leftJoinAndSelect('movie.detail', 'detail')
@@ -182,6 +197,8 @@ export class MovieService {
         .getOne();
 
       await qr.commitTransaction();
+
+      return updatedMovie;
     } catch (e) {
       await qr.rollbackTransaction();
       throw e;
@@ -206,8 +223,12 @@ export class MovieService {
     return id;
   }
 
-  private async validateGenres(ids: number[]): Promise<Genre[]> {
-    const genres = await this.genreRepository
+  private async validateGenres(
+    qr: QueryRunner,
+    ids: number[],
+  ): Promise<Genre[]> {
+    const genres = await qr.manager
+      .getRepository(Genre)
       .createQueryBuilder('genre')
       .where('genre.id IN (:...ids)', { ids })
       .getMany();
