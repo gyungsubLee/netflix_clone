@@ -47,14 +47,14 @@ export class MovieController {
   @Post()
   @RBAC(Role.admin)
   @UseInterceptors(TransactionInterceptor)
-  @UseInterceptors(FileInterceptor('movie'))
+  @UseInterceptors(FilesInterceptor('movies'))
   postMovie(
     @User() user: U,
     @QueryRunner() qr: QR,
     @Body() body: CreateMovieDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.movieService.create(user, qr, body, file);
+    return this.movieService.create(user, qr, body, files);
   }
 
   @Patch(':id')

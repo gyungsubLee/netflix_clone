@@ -74,7 +74,7 @@ export class MovieService {
     creator: User,
     qr: QueryRunner,
     dto: CreateMovieDto,
-    file?: Express.Multer.File,
+    files?: Express.Multer.File[],
   ) {
     // 1. Director 검증
     const director = await qr.manager
@@ -88,7 +88,6 @@ export class MovieService {
     }
 
     // 2. Genres 검증
-
     const genres = await this.validateGenres(qr, dto.genreIds);
 
     // 3. MovieDetail 생성
@@ -101,27 +100,27 @@ export class MovieService {
       .save(movieDetail);
 
     // 4. Movie 생성
-    const movieData: Partial<Movie> = {
-      title: dto.title,
-      director,
-      detail: savedDetail,
-      genres,
-      creator,
-    };
+    const movieRepo = qr.manager.getRepository(Movie);
 
     // 파일이 업로드된 경우 파일 경로 추가
-    if (file) {
-      movieData.movieFilePath = `/movie/${file.filename}`;
-    }
+    // TODO: MovieFile 테이블 분리 후, 1:N 관계로 변경
+    const firstFile = files?.[0];
+    const movieFilePath = firstFile
+      ? `/movie/${firstFile.filename}`
+      : undefined;
 
-    const movie = qr.manager.getRepository(Movie).create(movieData);
+    const movie = await movieRepo.create({
+      title: dto.title,
+      director, // ManyToOne
+      detail: savedDetail, // OneToOne or OneToMany의 한쪽일 가능성
+      genres, // ManyToMany
+      creator, // ManyToOne (권장: 필요한 최소 필드만 포함)
+      ...(movieFilePath ? { movieFilePath } : {}),
+    });
 
-    const savedMovie = (await qr.manager
-      .getRepository(Movie)
-      .save(movie)) as Movie;
+    const savedMovie = await movieRepo.save(movie);
 
     // 4. 한 번의 save로 Movie + MovieDetail + ManyToMany genres 연결
-
     return qr.manager
       .getRepository(Movie)
       .createQueryBuilder('movie')

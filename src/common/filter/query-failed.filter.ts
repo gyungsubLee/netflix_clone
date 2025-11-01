@@ -15,7 +15,7 @@ export class QueryFailedExceptionFilter implements ExceptionFilter {
     let message = '데이터베이스 에러 발생';
 
     if (exception.message.includes('duplicate key')) {
-      message = '중복 키 에러';
+      message = '유니크 제약 조건 오류 - 중복 값 할당';
     }
 
     response.status(status).json({
