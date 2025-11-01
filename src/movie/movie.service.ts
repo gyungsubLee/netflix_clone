@@ -74,7 +74,10 @@ export class MovieService {
     creator: User,
     qr: QueryRunner,
     dto: CreateMovieDto,
-    files?: Express.Multer.File[],
+    files?: {
+      movie?: Express.Multer.File[];
+      poster?: Express.Multer.File[];
+    },
   ) {
     // 1. Director 검증
     const director = await qr.manager
@@ -104,7 +107,11 @@ export class MovieService {
 
     // 파일이 업로드된 경우 파일 경로 추가
     // TODO: MovieFile 테이블 분리 후, 1:N 관계로 변경
-    const firstFile = files?.[0];
+    if (!files || !files.movie) {
+      throw new BadRequestException('영화 파일은 필수입니다.');
+    }
+
+    const firstFile = files.movie[0];
     const movieFilePath = firstFile
       ? `/movie/${firstFile.filename}`
       : undefined;

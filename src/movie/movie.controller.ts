@@ -12,6 +12,7 @@ import {
   ParseIntPipe,
   UploadedFiles,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -24,7 +25,11 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { User } from 'src/common/decorator/user.decorator';
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { Role } from 'src/auth/enum/role.enum';
 
 @Controller('movie')
@@ -47,13 +52,39 @@ export class MovieController {
   @Post()
   @RBAC(Role.admin)
   @UseInterceptors(TransactionInterceptor)
-  @UseInterceptors(FilesInterceptor('movies'))
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'movie', maxCount: 1 },
+        { name: 'poster', maxCount: 2 },
+      ],
+      {
+        limits: {
+          fileSize: 50000000, // 50MB
+        },
+        fileFilter: (req, file, callback) => {
+          if (file.mimetype !== 'video/mp4') {
+            return callback(
+              new BadRequestException('MP4 타입만 업로드 가능합니다.'),
+              false,
+            );
+          }
+          return callback(null, true);
+        },
+      },
+    ),
+  )
   postMovie(
     @User() user: U,
     @QueryRunner() qr: QR,
     @Body() body: CreateMovieDto,
-    @UploadedFiles() files?: Express.Multer.File[],
+    @UploadedFiles()
+    files?: {
+      movie?: Express.Multer.File[];
+      poster?: Express.Multer.File[];
+    },
   ) {
+    // return this.movieService.create(user, qr, body, files);
     return this.movieService.create(user, qr, body, files);
   }
 
