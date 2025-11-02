@@ -74,10 +74,7 @@ export class MovieService {
     creator: User,
     qr: QueryRunner,
     dto: CreateMovieDto,
-    files?: {
-      movie?: Express.Multer.File[];
-      poster?: Express.Multer.File[];
-    },
+    file: Express.Multer.File,
   ) {
     // 1. Director 검증
     const director = await qr.manager
@@ -105,24 +102,12 @@ export class MovieService {
     // 4. Movie 생성
     const movieRepo = qr.manager.getRepository(Movie);
 
-    // 파일이 업로드된 경우 파일 경로 추가
-    // TODO: MovieFile 테이블 분리 후, 1:N 관계로 변경
-    if (!files || !files.movie) {
-      throw new BadRequestException('영화 파일은 필수입니다.');
-    }
-
-    const firstFile = files.movie[0];
-    const movieFilePath = firstFile
-      ? `/movie/${firstFile.filename}`
-      : undefined;
-
     const movie = await movieRepo.create({
       title: dto.title,
       director, // ManyToOne
       detail: savedDetail, // OneToOne or OneToMany의 한쪽일 가능성
       genres, // ManyToMany
       creator, // ManyToOne (권장: 필요한 최소 필드만 포함)
-      ...(movieFilePath ? { movieFilePath } : {}),
     });
 
     const savedMovie = await movieRepo.save(movie);

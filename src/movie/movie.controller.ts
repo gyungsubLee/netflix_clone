@@ -31,6 +31,8 @@ import {
   FilesInterceptor,
 } from '@nestjs/platform-express';
 import { Role } from 'src/auth/enum/role.enum';
+import { Movie } from './entities/movie.entity';
+import { MovieFilePipe } from './pipe/movie-file.pipe';
 
 @Controller('movie')
 @UseInterceptors(CI)
@@ -53,39 +55,34 @@ export class MovieController {
   @RBAC(Role.admin)
   @UseInterceptors(TransactionInterceptor)
   @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'movie', maxCount: 1 },
-        { name: 'poster', maxCount: 2 },
-      ],
-      {
-        limits: {
-          fileSize: 50000000, // 50MB
-        },
-        fileFilter: (req, file, callback) => {
-          if (file.mimetype !== 'video/mp4') {
-            return callback(
-              new BadRequestException('MP4 타입만 업로드 가능합니다.'),
-              false,
-            );
-          }
-          return callback(null, true);
-        },
+    FileInterceptor('movie', {
+      limits: {
+        fileSize: 50000000, // 50MB
       },
-    ),
+      fileFilter: (req, file, callback) => {
+        if (file.mimetype !== 'video/mp4') {
+          return callback(
+            new BadRequestException('MP4 타입만 업로드 가능합니다.'),
+            false,
+          );
+        }
+        return callback(null, true);
+      },
+    }),
   )
   postMovie(
     @User() user: U,
     @QueryRunner() qr: QR,
     @Body() body: CreateMovieDto,
-    @UploadedFiles()
-    files?: {
-      movie?: Express.Multer.File[];
-      poster?: Express.Multer.File[];
-    },
+    @UploadedFile(
+      new MovieFilePipe({
+        maxSize: 50, // MB 단위
+        mimetypes: 'video/mp4',
+      }),
+    )
+    file: Express.Multer.File,
   ) {
-    // return this.movieService.create(user, qr, body, files);
-    return this.movieService.create(user, qr, body, files);
+    return this.movieService.create(user, qr, body, file);
   }
 
   @Patch(':id')
