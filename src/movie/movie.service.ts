@@ -14,6 +14,7 @@ import { Genre } from 'src/genre/entities/genre.entity';
 import { User } from 'src/user/entities/user.entity';
 import { GetMoviesReqDto } from './dto/get-movies.dto';
 import { CommonService } from 'src/common/common.service';
+import { join } from 'path';
 
 @Injectable()
 export class MovieService {
@@ -74,7 +75,7 @@ export class MovieService {
     creator: User,
     qr: QueryRunner,
     dto: CreateMovieDto,
-    file: Express.Multer.File,
+    movieFileName: string,
   ) {
     // 1. Director 검증
     const director = await qr.manager
@@ -102,12 +103,15 @@ export class MovieService {
     // 4. Movie 생성
     const movieRepo = qr.manager.getRepository(Movie);
 
+    const movieFolder = join('public', 'movie');
+
     const movie = await movieRepo.create({
       title: dto.title,
-      director, // ManyToOne
-      detail: savedDetail, // OneToOne or OneToMany의 한쪽일 가능성
-      genres, // ManyToMany
-      creator, // ManyToOne (권장: 필요한 최소 필드만 포함)
+      director,
+      detail: savedDetail,
+      genres,
+      creator,
+      movieFilePath: join(movieFolder, movieFileName),
     });
 
     const savedMovie = await movieRepo.save(movie);

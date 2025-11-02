@@ -80,9 +80,9 @@ export class MovieController {
         mimetypes: 'video/mp4',
       }),
     )
-    file: Express.Multer.File,
+    movie: Express.Multer.File,
   ) {
-    return this.movieService.create(user, qr, body, file);
+    return this.movieService.create(user, qr, body, movie.filename);
   }
 
   @Patch(':id')
